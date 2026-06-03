@@ -1,6 +1,9 @@
 # Utilisation d'une image de base Node.js
 FROM node:18
 
+# Installation de iputils pour ping
+RUN apt-get update && apt-get install -y iputils-ping && rm -rf /var/lib/apt/lists/*
+
 # Création du répertoire de travail dans le conteneur
 WORKDIR /app
 
