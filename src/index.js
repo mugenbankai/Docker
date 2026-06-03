@@ -1,9 +1,21 @@
-const app = require("express")();
+const express = require("express");
+const taskRoutes = require("./routes/tasks");
+const errorHandler = require("./middleware/errorHandler");
 
+const app = express();
+
+// Middleware
+app.use(express.json());
+
+// Routes
 app.get("/", (req, res) => res.json({ message: "Bonjouuuur :)" }));
+app.use("/tasks", taskRoutes);
+
+// Error Handler
+app.use(errorHandler);
 
 const port = process.env.PORT || 8080;
 
 app.listen(port, () =>
-  console.log(`app listening on http://localhost:${port}`),
+  console.log(`app listening on http://localhost:${port}`)
 );
