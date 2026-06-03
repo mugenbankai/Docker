@@ -74,3 +74,16 @@ EXERCICE GUIDÉ — Utiliser un fichier .env
 ![alt text](image-26.png)
 
 
+
+
+
+EXERCICE GUIDÉ — Expose vs Ports
+
+![alt text](image-27.png)
+
+![alt text](image-28.png)
+
+![alt text](image-29.png)
+
+![alt text](image-30.png)
+
