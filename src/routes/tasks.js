@@ -1,8 +1,8 @@
 const express = require("express");
-const Task = require("../models/task");
+const TasksModel = require("../models/tasks");
 
 const router = express.Router();
-let tasks = [];
+const tasksModel = new TasksModel();
 
 // POST /tasks - Créer une tâche
 router.post("/", (req, res, next) => {
@@ -15,9 +15,7 @@ router.post("/", (req, res, next) => {
       throw error;
     }
 
-    const task = new Task(title, description, status || "pending");
-    tasks.push(task);
-
+    const task = tasksModel.create(title, description, status || "pending");
     res.status(201).json(task);
   } catch (err) {
     next(err);
@@ -26,13 +24,13 @@ router.post("/", (req, res, next) => {
 
 // GET /tasks - Lister toutes les tâches
 router.get("/", (req, res) => {
-  res.json(tasks);
+  res.json(tasksModel.getAll());
 });
 
 // GET /tasks/:id - Voir une tâche
 router.get("/:id", (req, res, next) => {
   try {
-    const task = tasks.find((t) => t.id === req.params.id);
+    const task = tasksModel.getById(req.params.id);
 
     if (!task) {
       const error = new Error("Task not found");
@@ -49,7 +47,7 @@ router.get("/:id", (req, res, next) => {
 // PUT /tasks/:id - Modifier une tâche
 router.put("/:id", (req, res, next) => {
   try {
-    const task = tasks.find((t) => t.id === req.params.id);
+    const task = tasksModel.getById(req.params.id);
 
     if (!task) {
       const error = new Error("Task not found");
@@ -58,9 +56,9 @@ router.put("/:id", (req, res, next) => {
     }
 
     const { title, description, status } = req.body;
-    task.update(title, description, status);
+    const updated = tasksModel.update(req.params.id, title, description, status);
 
-    res.json(task);
+    res.json(updated);
   } catch (err) {
     next(err);
   }
@@ -69,19 +67,19 @@ router.put("/:id", (req, res, next) => {
 // DELETE /tasks/:id - Supprimer une tâche
 router.delete("/:id", (req, res, next) => {
   try {
-    const index = tasks.findIndex((t) => t.id === req.params.id);
+    const deletedTask = tasksModel.delete(req.params.id);
 
-    if (index === -1) {
+    if (!deletedTask) {
       const error = new Error("Task not found");
       error.status = 404;
       throw error;
     }
 
-    const deletedTask = tasks.splice(index, 1);
-    res.json(deletedTask[0]);
+    res.json(deletedTask);
   } catch (err) {
     next(err);
   }
 });
 
 module.exports = router;
+
