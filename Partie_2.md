@@ -65,3 +65,12 @@ EXERCICE GUIDÉ — Variables d’environnement
 
 ![alt text](image-25.png)
 
+
+
+
+
+EXERCICE GUIDÉ — Utiliser un fichier .env
+
+![alt text](image-26.png)
+
+
