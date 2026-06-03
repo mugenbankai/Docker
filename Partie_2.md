@@ -49,3 +49,19 @@ EXERCICE GUIDÉ 2 — Network dans docker-compose
 Nettoyage
 
 ![alt text](image-21.png)
+
+
+
+
+EXERCICE GUIDÉ — Variables d’environnement 
+
+Étape 3 — Tester avec docker run
+
+![alt text](image-22.png)
+
+![alt text](image-23.png)
+
+![alt text](image-24.png)
+
+![alt text](image-25.png)
+
