@@ -5,7 +5,7 @@ const router = express.Router();
 const tasksModel = new TasksModel();
 
 // POST /tasks - Créer une tâche
-router.post("/", (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const { title, description, status } = req.body;
 
@@ -15,7 +15,11 @@ router.post("/", (req, res, next) => {
       throw error;
     }
 
-    const task = tasksModel.create(title, description, status || "pending");
+    const task = await tasksModel.create(
+      title,
+      description,
+      status || "pending",
+    );
     res.status(201).json(task);
   } catch (err) {
     next(err);
@@ -23,14 +27,19 @@ router.post("/", (req, res, next) => {
 });
 
 // GET /tasks - Lister toutes les tâches
-router.get("/", (req, res) => {
-  res.json(tasksModel.getAll());
+router.get("/", async (req, res, next) => {
+  try {
+    const tasks = await tasksModel.getAll();
+    res.json(tasks);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // GET /tasks/:id - Voir une tâche
-router.get("/:id", (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
   try {
-    const task = tasksModel.getById(req.params.id);
+    const task = await tasksModel.getById(req.params.id);
 
     if (!task) {
       const error = new Error("Task not found");
@@ -45,9 +54,9 @@ router.get("/:id", (req, res, next) => {
 });
 
 // PUT /tasks/:id - Modifier une tâche
-router.put("/:id", (req, res, next) => {
+router.put("/:id", async (req, res, next) => {
   try {
-    const task = tasksModel.getById(req.params.id);
+    const task = await tasksModel.getById(req.params.id);
 
     if (!task) {
       const error = new Error("Task not found");
@@ -56,7 +65,12 @@ router.put("/:id", (req, res, next) => {
     }
 
     const { title, description, status } = req.body;
-    const updated = tasksModel.update(req.params.id, title, description, status);
+    const updated = await tasksModel.update(
+      req.params.id,
+      title,
+      description,
+      status,
+    );
 
     res.json(updated);
   } catch (err) {
@@ -65,9 +79,9 @@ router.put("/:id", (req, res, next) => {
 });
 
 // DELETE /tasks/:id - Supprimer une tâche
-router.delete("/:id", (req, res, next) => {
+router.delete("/:id", async (req, res, next) => {
   try {
-    const deletedTask = tasksModel.delete(req.params.id);
+    const deletedTask = await tasksModel.delete(req.params.id);
 
     if (!deletedTask) {
       const error = new Error("Task not found");
@@ -82,4 +96,3 @@ router.delete("/:id", (req, res, next) => {
 });
 
 module.exports = router;
-

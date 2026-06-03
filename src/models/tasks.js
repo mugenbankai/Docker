@@ -1,61 +1,122 @@
-function generateUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+const { randomUUID } = require("crypto");
+const { pool } = require("../db");
 
 class TasksModel {
   constructor() {
-    this.tasks = [];
+    this.ready = this.ensureTable();
   }
 
-  create(title, description, status = "pending") {
-    const task = {
-      id: generateUUID(),
-      title: title || "",
-      description,
-      status,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.tasks.push(task);
-    return task;
+  async ensureTable() {
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS tasks (
+        id UUID PRIMARY KEY,
+        title TEXT,
+        description TEXT NOT NULL,
+        status TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );`,
+    );
   }
 
-  getAll() {
-    return this.tasks;
+  async create(title, description, status = "pending") {
+    await this.ready;
+    const id = randomUUID();
+    const taskTitle = title || "";
+
+    const result = await pool.query(
+      `INSERT INTO tasks (id, title, description, status)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, title, description, status,
+                 created_at AS "createdAt",
+                 updated_at AS "updatedAt"`,
+      [id, taskTitle, description, status],
+    );
+
+    return result.rows[0];
   }
 
-  getById(id) {
-    return this.tasks.find((task) => task.id === id);
+  async getAll() {
+    await this.ready;
+    const result = await pool.query(
+      `SELECT id, title, description, status,
+              created_at AS "createdAt",
+              updated_at AS "updatedAt"
+       FROM tasks
+       ORDER BY created_at DESC`,
+    );
+    return result.rows;
   }
 
-  update(id, title, description, status) {
-    const task = this.getById(id);
-    if (!task) return null;
-
-    if (title !== undefined) task.title = title;
-    if (description !== undefined) task.description = description;
-    if (status !== undefined) task.status = status;
-    task.updatedAt = new Date();
-
-    return task;
+  async getById(id) {
+    await this.ready;
+    const result = await pool.query(
+      `SELECT id, title, description, status,
+              created_at AS "createdAt",
+              updated_at AS "updatedAt"
+       FROM tasks
+       WHERE id = $1`,
+      [id],
+    );
+    return result.rows[0];
   }
 
-  delete(id) {
-    const index = this.tasks.findIndex((task) => task.id === id);
-    if (index === -1) return null;
+  async update(id, title, description, status) {
+    await this.ready;
+    const fields = [];
+    const values = [];
+    let index = 1;
 
-    const deletedTask = this.tasks.splice(index, 1);
-    return deletedTask[0];
+    if (title !== undefined) {
+      fields.push(`title = $${index++}`);
+      values.push(title);
+    }
+    if (description !== undefined) {
+      fields.push(`description = $${index++}`);
+      values.push(description);
+    }
+    if (status !== undefined) {
+      fields.push(`status = $${index++}`);
+      values.push(status);
+    }
+
+    if (fields.length === 0) {
+      return this.getById(id);
+    }
+
+    values.push(id);
+
+    const result = await pool.query(
+      `UPDATE tasks
+       SET ${fields.join(", ")},
+           updated_at = NOW()
+       WHERE id = $${index}
+       RETURNING id, title, description, status,
+                 created_at AS "createdAt",
+                 updated_at AS "updatedAt"`,
+      values,
+    );
+
+    return result.rows[0] || null;
   }
 
-  clear() {
-    this.tasks = [];
+  async delete(id) {
+    await this.ready;
+    const result = await pool.query(
+      `DELETE FROM tasks
+       WHERE id = $1
+       RETURNING id, title, description, status,
+                 created_at AS "createdAt",
+                 updated_at AS "updatedAt"`,
+      [id],
+    );
+    return result.rows[0] || null;
+  }
+
+  async clear() {
+    await this.ready;
+    await pool.query("TRUNCATE TABLE tasks");
   }
 }
 
 module.exports = TasksModel;
-

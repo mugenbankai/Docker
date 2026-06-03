@@ -17,5 +17,5 @@ app.use(errorHandler);
 const port = process.env.PORT || 3001;
 
 app.listen(port, () =>
-  console.log(`app listening on http://localhost:${port}`)
+  console.log(`app listening on http://localhost:${port}`),
 );
