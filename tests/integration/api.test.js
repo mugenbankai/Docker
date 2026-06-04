@@ -2,15 +2,20 @@ const request = require("supertest");
 const express = require("express");
 const taskRoutes = require("../../src/routes/tasks");
 const errorHandler = require("../../src/middleware/errorHandler");
+const TasksModel = require("../../src/models/tasks");
 
 describe("Tasks API", () => {
   let app;
+  let tasksModel;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     app = express();
     app.use(express.json());
     app.use("/tasks", taskRoutes);
     app.use(errorHandler);
+
+    tasksModel = new TasksModel();
+    await tasksModel.clear();
   });
 
   describe("POST /tasks", () => {

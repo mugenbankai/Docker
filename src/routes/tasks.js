@@ -3,6 +3,16 @@ const TasksModel = require("../models/tasks");
 
 const router = express.Router();
 const tasksModel = new TasksModel();
+const UUID_V4_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function ensureValidTaskId(taskId) {
+  if (!UUID_V4_REGEX.test(taskId)) {
+    const error = new Error("Task not found");
+    error.status = 404;
+    throw error;
+  }
+}
 
 // POST /tasks - Créer une tâche
 router.post("/", async (req, res, next) => {
@@ -39,6 +49,7 @@ router.get("/", async (req, res, next) => {
 // GET /tasks/:id - Voir une tâche
 router.get("/:id", async (req, res, next) => {
   try {
+    ensureValidTaskId(req.params.id);
     const task = await tasksModel.getById(req.params.id);
 
     if (!task) {
@@ -56,6 +67,7 @@ router.get("/:id", async (req, res, next) => {
 // PUT /tasks/:id - Modifier une tâche
 router.put("/:id", async (req, res, next) => {
   try {
+    ensureValidTaskId(req.params.id);
     const task = await tasksModel.getById(req.params.id);
 
     if (!task) {
@@ -81,6 +93,7 @@ router.put("/:id", async (req, res, next) => {
 // DELETE /tasks/:id - Supprimer une tâche
 router.delete("/:id", async (req, res, next) => {
   try {
+    ensureValidTaskId(req.params.id);
     const deletedTask = await tasksModel.delete(req.params.id);
 
     if (!deletedTask) {

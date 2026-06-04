@@ -3,13 +3,14 @@ const TasksModel = require("../../src/models/tasks");
 describe("TasksModel", () => {
   let tasksModel;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tasksModel = new TasksModel();
+    await tasksModel.clear();
   });
 
   describe("create", () => {
-    it("should create a new task with required fields", () => {
-      const task = tasksModel.create(
+    it("should create a new task with required fields", async () => {
+      const task = await tasksModel.create(
         "Test Title",
         "Test Description",
         "pending",
@@ -23,57 +24,65 @@ describe("TasksModel", () => {
       expect(task).toHaveProperty("updatedAt");
     });
 
-    it("should create a task with default status 'pending'", () => {
-      const task = tasksModel.create("Title", "Description");
+    it("should create a task with default status 'pending'", async () => {
+      const task = await tasksModel.create("Title", "Description");
       expect(task.status).toBe("pending");
     });
 
-    it("should create a task with empty title if not provided", () => {
-      const task = tasksModel.create(null, "Description");
+    it("should create a task with empty title if not provided", async () => {
+      const task = await tasksModel.create(null, "Description");
       expect(task.title).toBe("");
     });
 
-    it("should add task to tasks array", () => {
-      tasksModel.create("Title 1", "Description 1");
-      tasksModel.create("Title 2", "Description 2");
-      expect(tasksModel.getAll().length).toBe(2);
+    it("should add task to tasks array", async () => {
+      await tasksModel.create("Title 1", "Description 1");
+      await tasksModel.create("Title 2", "Description 2");
+      const tasks = await tasksModel.getAll();
+      expect(tasks.length).toBe(2);
     });
   });
 
   describe("getAll", () => {
-    it("should return empty array when no tasks exist", () => {
-      expect(tasksModel.getAll()).toEqual([]);
+    it("should return empty array when no tasks exist", async () => {
+      const tasks = await tasksModel.getAll();
+      expect(tasks).toEqual([]);
     });
 
-    it("should return all created tasks", () => {
-      tasksModel.create("Title 1", "Description 1");
-      tasksModel.create("Title 2", "Description 2");
-      const tasks = tasksModel.getAll();
+    it("should return all created tasks", async () => {
+      await tasksModel.create("Title 1", "Description 1");
+      await tasksModel.create("Title 2", "Description 2");
+      const tasks = await tasksModel.getAll();
 
       expect(tasks.length).toBe(2);
-      expect(tasks[0].title).toBe("Title 1");
-      expect(tasks[1].title).toBe("Title 2");
+      expect(tasks.map((task) => task.title).sort()).toEqual([
+        "Title 1",
+        "Title 2",
+      ]);
     });
   });
 
   describe("getById", () => {
-    it("should return task by id", () => {
-      const createdTask = tasksModel.create("Title", "Description");
-      const foundTask = tasksModel.getById(createdTask.id);
+    it("should return task by id", async () => {
+      const createdTask = await tasksModel.create("Title", "Description");
+      const foundTask = await tasksModel.getById(createdTask.id);
 
       expect(foundTask).toEqual(createdTask);
     });
 
-    it("should return undefined if task not found", () => {
-      const foundTask = tasksModel.getById("non-existent-id");
+    it("should return undefined if task not found", async () => {
+      const unknownId = "00000000-0000-4000-8000-000000000000";
+      const foundTask = await tasksModel.getById(unknownId);
       expect(foundTask).toBeUndefined();
     });
   });
 
   describe("update", () => {
-    it("should update task title, description, and status", () => {
-      const createdTask = tasksModel.create("Old Title", "Old Description");
-      const updated = tasksModel.update(
+    it("should update task title, description, and status", async () => {
+      const createdTask = await tasksModel.create(
+        "Old Title",
+        "Old Description",
+      );
+      const updated = await tasksModel.update(
         createdTask.id,
         "New Title",
         "New Description",
@@ -85,13 +94,13 @@ describe("TasksModel", () => {
       expect(updated.status).toBe("completed");
     });
 
-    it("should update only provided fields", () => {
-      const createdTask = tasksModel.create(
+    it("should update only provided fields", async () => {
+      const createdTask = await tasksModel.create(
         "Original Title",
         "Original Description",
         "pending",
       );
-      const updated = tasksModel.update(
+      const updated = await tasksModel.update(
         createdTask.id,
         undefined,
         "New Description",
@@ -102,48 +111,55 @@ describe("TasksModel", () => {
       expect(updated.status).toBe("pending");
     });
 
-    it("should update updatedAt timestamp", () => {
-      const createdTask = tasksModel.create("Title", "Description");
-      const originalUpdatedAt = createdTask.updatedAt;
+    it("should update updatedAt timestamp", async () => {
+      const createdTask = await tasksModel.create("Title", "Description");
+      const originalUpdatedAt = new Date(createdTask.updatedAt).getTime();
+      const updatedTask = await tasksModel.update(
+        createdTask.id,
+        "Updated Title",
+      );
+      const updatedAt = new Date(updatedTask.updatedAt).getTime();
 
-      setTimeout(() => {
-        tasksModel.update(createdTask.id, "Updated Title");
-        expect(createdTask.updatedAt).toBeGreaterThan(originalUpdatedAt);
-      }, 10);
+      expect(updatedAt).toBeGreaterThanOrEqual(originalUpdatedAt);
     });
 
-    it("should return null if task not found", () => {
-      const updated = tasksModel.update("non-existent-id", "Title");
+    it("should return null if task not found", async () => {
+      const unknownId = "00000000-0000-4000-8000-000000000000";
+      const updated = await tasksModel.update(unknownId, "Title");
       expect(updated).toBeNull();
     });
   });
 
   describe("delete", () => {
-    it("should delete task by id", () => {
-      const task1 = tasksModel.create("Title 1", "Description 1");
-      const task2 = tasksModel.create("Title 2", "Description 2");
+    it("should delete task by id", async () => {
+      const task1 = await tasksModel.create("Title 1", "Description 1");
+      await tasksModel.create("Title 2", "Description 2");
 
-      const deleted = tasksModel.delete(task1.id);
+      const deleted = await tasksModel.delete(task1.id);
+      const tasks = await tasksModel.getAll();
+      const fromDb = await tasksModel.getById(task1.id);
 
       expect(deleted).toEqual(task1);
-      expect(tasksModel.getAll().length).toBe(1);
-      expect(tasksModel.getById(task1.id)).toBeUndefined();
+      expect(tasks.length).toBe(1);
+      expect(fromDb).toBeUndefined();
     });
 
-    it("should return null if task not found", () => {
-      const deleted = tasksModel.delete("non-existent-id");
+    it("should return null if task not found", async () => {
+      const unknownId = "00000000-0000-4000-8000-000000000000";
+      const deleted = await tasksModel.delete(unknownId);
       expect(deleted).toBeNull();
     });
   });
 
   describe("clear", () => {
-    it("should clear all tasks", () => {
-      tasksModel.create("Title 1", "Description 1");
-      tasksModel.create("Title 2", "Description 2");
+    it("should clear all tasks", async () => {
+      await tasksModel.create("Title 1", "Description 1");
+      await tasksModel.create("Title 2", "Description 2");
 
-      tasksModel.clear();
+      await tasksModel.clear();
+      const tasks = await tasksModel.getAll();
 
-      expect(tasksModel.getAll()).toEqual([]);
+      expect(tasks).toEqual([]);
     });
   });
 });

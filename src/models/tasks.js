@@ -2,21 +2,27 @@ const { randomUUID } = require("crypto");
 const { pool } = require("../db");
 
 class TasksModel {
+  static tableReady = null;
+
   constructor() {
-    this.ready = this.ensureTable();
+    this.ready = TasksModel.ensureTableOnce();
   }
 
-  async ensureTable() {
-    await pool.query(
-      `CREATE TABLE IF NOT EXISTS tasks (
-        id UUID PRIMARY KEY,
-        title TEXT,
-        description TEXT NOT NULL,
-        status TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );`,
-    );
+  static ensureTableOnce() {
+    if (!TasksModel.tableReady) {
+      TasksModel.tableReady = pool.query(
+        `CREATE TABLE IF NOT EXISTS tasks (
+          id UUID PRIMARY KEY,
+          title TEXT,
+          description TEXT NOT NULL,
+          status TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );`,
+      );
+    }
+
+    return TasksModel.tableReady;
   }
 
   async create(title, description, status = "pending") {
