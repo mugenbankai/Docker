@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: todo-api
-          image: projet-docker-api:latest
+          image: registry:5000/todo-api:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOST

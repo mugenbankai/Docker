@@ -62,8 +62,13 @@ DOCKERHUB_TOKEN
 La phase 4 se valide manuellement avec ces commandes :
 
 ```bash
-docker build -t projet-docker-api:latest .
 kubectl apply -f k8s/
+kubectl port-forward svc/registry 5000:5000
+docker build -t projet-docker-api:latest .
+docker tag projet-docker-api:latest localhost:5000/todo-api:latest
+docker push localhost:5000/todo-api:latest
+kubectl set image deployment/todo-api todo-api=registry:5000/todo-api:latest
+kubectl rollout status deployment/todo-api
 kubectl get pods -w
 kubectl get svc todo-api
 kubectl rollout status deployment/todo-api
