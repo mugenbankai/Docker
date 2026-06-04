@@ -17,7 +17,15 @@ spec:
           image: <pseudo-dockerhub>/todo-api:latest
           imagePullPolicy: Always
           env:
-            - name: DATABASE_URL
-              value: postgres://postgres:secret@database:5432/testdb
+            - name: DB_HOST
+              value: database
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: testdb
+            - name: DB_USER
+              value: postgres
+            - name: DB_PASSWORD
+              value: secret
           ports:
             - containerPort: 3001

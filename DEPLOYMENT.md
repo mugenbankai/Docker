@@ -5,7 +5,7 @@
 - Une machine avec K3S installé
 - `kubectl` configuré sur le cluster
 - Une image Docker accessible sur DockerHub
-- Une base PostgreSQL accessible avec une URL de type `postgres://postgres:secret@database:5432/testdb`
+- Une base PostgreSQL accessible avec les variables `DB_*`
 
 ## Installation de K3S
 
@@ -32,10 +32,14 @@ kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
 
-La variable d'environnement attendue par le code est `DATABASE_URL`. Exemple cohérent avec le code et Docker Compose :
+Variables d'environnement attendues par le code :
 
 ```bash
-postgres://postgres:secret@database:5432/testdb
+DB_HOST=database
+DB_PORT=5432
+DB_NAME=testdb
+DB_USER=postgres
+DB_PASSWORD=secret
 ```
 
 ## Vérification

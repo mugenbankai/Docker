@@ -1,12 +1,26 @@
 const { Pool } = require("pg");
 
-const connectionString = process.env.DATABASE_URL;
+const { DATABASE_URL, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD } =
+  process.env;
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL is required to use PostgreSQL persistence.");
+const hasDbParts =
+  DB_HOST && DB_PORT && DB_NAME && DB_USER && DB_PASSWORD !== undefined;
+
+if (!DATABASE_URL && !hasDbParts) {
+  throw new Error(
+    "Configure DATABASE_URL or DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD.",
+  );
 }
 
-const pool = new Pool({ connectionString });
+const pool = DATABASE_URL
+  ? new Pool({ connectionString: DATABASE_URL })
+  : new Pool({
+      host: DB_HOST,
+      port: Number(DB_PORT),
+      database: DB_NAME,
+      user: DB_USER,
+      password: DB_PASSWORD,
+    });
 
 module.exports = {
   pool,
