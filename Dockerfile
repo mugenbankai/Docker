@@ -1,5 +1,10 @@
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
-RUN npm init -y && npm install express pg
-COPY app.js .
-CMD ["node", "app.js"]
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 3001
+CMD ["npm", "start"]

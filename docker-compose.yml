@@ -3,10 +3,9 @@ services:
   api:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
-      DB_HOST: database
-      DB_PASSWORD: secret
+      DATABASE_URL: postgres://postgres:secret@database:5432/testdb
     depends_on:
       - database
   database:
