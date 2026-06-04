@@ -9,6 +9,7 @@ app.use(express.json());
 
 // Routes
 app.get("/", (req, res) => res.json({ message: "Bonjouuuur :)" }));
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use("/tasks", taskRoutes);
 
 // Error Handler

@@ -49,6 +49,39 @@ kubectl get pods
 kubectl get svc
 ```
 
+## Déploiement K3S phase 4
+
+Pour le déploiement automatisé sur la branche `main`, la pipeline attend deux secrets :
+
+```bash
+KUBE_CONFIG
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+La phase 4 se valide manuellement avec ces commandes :
+
+```bash
+docker build -t projet-docker-api:latest .
+kubectl apply -f k8s/
+kubectl get pods -w
+kubectl get svc todo-api
+kubectl rollout status deployment/todo-api
+kubectl port-forward svc/todo-api 8080:80
+curl http://localhost:8080/health
+```
+
+Pour le rolling update et la résilience :
+
+```bash
+kubectl set image deployment/todo-api todo-api=<dockerhub-user>/todo-api:<commit-sha>
+kubectl rollout status deployment/todo-api
+kubectl get pods
+kubectl delete pod <pod-name>
+kubectl get pods
+kubectl describe pod <pod-name>
+```
+
 ## Dépannage
 
 Si K3S ne démarre pas correctement, consulter les logs :
